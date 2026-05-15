@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Modelo 3D Interativo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d1117;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    #canvas-wrap {
+      position: absolute;
+      inset: 0;
+    } 
+
+    /* ── ÍNDICE LATERAL ─────────────────────── */
+    #indice {
+      position: absolute;
+      top: 50%;
+      right: 20px;
+      transform: translateY(-50%);
+      width: 260px;
+      max-height: 80vh;
+      background: rgba(10, 14, 25, 0.88);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 14px 12px;
+      z-index: 20;
+      backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    #indice h3 {
+      color: rgba(255,255,255,0.55);
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      flex-shrink: 0;
+    }
+
+    #lista-indice {
+      overflow-y: auto;
+      flex: 1;
+      padding-right: 4px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.15) transparent;
+    }
+
+    #lista-indice::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    #lista-indice::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    #lista-indice::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.15);
+      border-radius: 4px;
+    }
+
+    #lista-indice::-webkit-scrollbar-thumb:hover {
+      background: rgba(255,255,255,0.28);
+    }
+
+    .item-indice {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      padding: 7px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+      margin-bottom: 2px;
+    }
+
+    .item-indice:hover {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .item-indice.ativo {
+      background: rgba(255,255,255,0.09);
+    }
+
+    .num-badge {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: bold;
+      color: #fff;
+      margin-top: 1px;
+    }
+
+    .item-texto { flex: 1; }
+
+    .item-titulo {
+      font-size: 13px;
+      font-weight: bold;
+      line-height: 1.3;
+    }
+
+    .item-desc {
+      font-size: 11px;
+      color: rgba(255,255,255,0.45);
+      margin-top: 2px;
+    }
+
+    /* ── BOLINHAS ───────────────────────────── */
+    .bolinha {
+      position: absolute;
+      width: 26px;
+      height: 26px;
+      border: 2px solid rgba(255,255,255,0.7);
+      border-radius: 50%;
+      cursor: pointer;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      transition: opacity 0.2s, transform 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: bold;
+      color: #fff;
+      user-select: none;
+    }
+
+    .bolinha:hover { transform: translate(-50%, -50%) scale(1.2); }
+
+    .bolinha.ativa {
+      transform: translate(-50%, -50%) scale(1.25);
+      border-color: #fff;
+      box-shadow: 0 0 0 4px rgba(255,255,255,0.15);
+    }
+
+    .bolinha-pulse::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      animation: pulse 1.8s infinite;
+    }
+
+    @keyframes pulse {
+      0%   { box-shadow: 0 0 0 0 rgba(255,255,255,0.35); }
+      70%  { box-shadow: 0 0 0 8px rgba(255,255,255,0); }
+      100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+    }
+
+    /* ── ETIQUETA (tooltip) ─────────────────── */
+    .etiqueta {
+      position: absolute;
+      background: rgba(10,14,30,0.95);
+      color: white;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-family: Arial, sans-serif;
+      font-size: 13px;
+      transform: translate(-50%, -140%);
+      white-space: nowrap;
+      display: none;
+      z-index: 30;
+      pointer-events: none;
+      border-left: 3px solid transparent;
+    }
+
+    .etiqueta .titulo {
+      font-weight: bold;
+      margin-bottom: 2px;
+    }
+
+    .etiqueta .nervo {
+      font-size: 11px;
+      opacity: 0.65;
+    }
+
+    #instrucao {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.3);
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    #caixa-informativa {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  width: 700px;
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.15);
+  border-radius: 10px;
+  padding: 20px 12px;
+  z-index: 20;
+  font-family: Arial, sans-serif;
+  color: #000000;
+}
+
+#caixa-informativa h4 {
+  font-size: 13px;
+  font-weight: bold;
+  margin-bottom: 6px;
+  color: #000000;
+}
+
+#caixa-informativa p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #000000;
+}
+  </style>
+</head>
+<body>
+
+<div id="canvas-wrap"></div>
+
+<div id="indice">
+  <h3>Estruturas anatômicas</h3>
+  <div id="lista-indice"></div>
+</div>
+
+<div id="instrucao">Clique nas bolinhas para identificar as estruturas</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+
+<div id="caixa-informativa">
+  <h4>Observações Explicativas:</h4>
+  </p>Para saber os nomes dos músculos, clique nos números que aparecem sobre o modelo. 
+  </p>O índice lateral também pode ser utilizado para navegação rápida.
+  <p>
+
+<div id="canvas-wrap"></div>
+
+<div id="instrucao">Clique nas bolinhas para identificar as estruturas</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+
+<script>
+
+  
+
+/* ── CORES POR ANOTAÇÃO ─────────────────────────────────────────── */
+const CORES = [
+  '#7C6FE0', '#E06F6F', '#4DB88A', '#5AACE0', '#E0A03A', 
+  '#D46FBB', '#6FBCE0', '#A0C44A', '#E07C3A', '#9ADE7B'
+];
+
+/* ── ANOTAÇÕES ──────────────────────────────────────────────────── */
+const anotacoes = [
+  /* 01 */ { num:  1, posicao: new THREE.Vector3( 0.1,  -0.2,    0.2  ), normal: new THREE.Vector3(  0,  0,  1), titulo: 'Músculo Genioglosso',            texto: 'Hipoglosso' },
+  /* 02 */ { num:  2, posicao: new THREE.Vector3( 0.3,  0.1,  -0.4  ), normal: new THREE.Vector3(  0,  0,  1), titulo: 'Músculo Estiloglosso',            texto: 'Hipoglosso' },     
+  /* 03 */ { num:  3, posicao: new THREE.Vector3( 0.2,  0.3,  -0.35  ), normal: new THREE.Vector3(  0,  0,  1), titulo: 'Músculo Palatoglosso',            texto: 'Glossofaríngeo' },       
+  /* 04 */ { num:  4, posicao: new THREE.Vector3( 0.3,  0,  0.1  ), normal: new THREE.Vector3(  0,  0,  1), titulo: 'Músculo Hioglosso',             texto: 'Hipoglosso' }, 
+  /* 05 */ { num:  5, posicao: new THREE.Vector3( 0,    0.1, 0.2  ), normal: new THREE.Vector3(  0,  0,  1), titulo: 'Músculo longitudinal Inferior',  texto: 'Hipoglosso' }, 
+  /* 06 */ { num:  6, posicao: new THREE.Vector3( 0.1,  -0.7,  0  ), normal: new THREE.Vector3(  0,  0,  1), titulo: 'Músculo Esterno-Hiódeo',          texto: 'Plexo Cervical' },
+  /* 07 */ { num:  7, posicao: new THREE.Vector3( -0.2,  -0.6,  0  ), normal: new THREE.Vector3(  0,  0.2,  1), titulo: 'Músculo Esterno-Tireóideo',          texto: 'Plexo Cervical' },
+  /* 08 */ { num:  8, posicao: new THREE.Vector3( 0.2,  0.32,  0.4  ), normal: new THREE.Vector3(  0,  0,  1), titulo: 'Músculo Longitudinal Superior',          texto: 'Hipoglosso' },    
+  /* 09 */ { num:  9, posicao: new THREE.Vector3( 0.2,  0.2,  0.2  ), normal: new THREE.Vector3(  0,  0,  1), titulo: 'Músculo Transverso',          texto: 'Hipoglosso' },
+  /* 10 */ { num:  10, posicao: new THREE.Vector3( 0.2,  0.22,  0.1 ), normal: new THREE.Vector3(  0,  0,  1), titulo: 'Músculo Esterno-Hiódeo',          texto: 'Hipoglosso' },    
+  /* 11 */ { num:  11, posicao: new THREE.Vector3( -0.2,  -0.8,  0  ), normal: new THREE.Vector3(  0,  0.2,  1), titulo: 'Músculo Omo-Hióideo',          texto: 'Plexo Cervical' },
+  /* 12 */ { num:  12, posicao: new THREE.Vector3( -0.2,  -0.45,  0.1  ), normal: new THREE.Vector3(  0,  0.2,  1), titulo: 'Músculo Genio-Hióideo',          texto: 'Plexo Cervical' },
+]; 
+
+/* ── THREE.JS SETUP ─────────────────────────────────────────────── */
+const scene    = new THREE.Scene();
+const camera   = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+/* >>> AJUSTE DE POSIÇÃO FIXA DA CÂMERA <<< */
+// Altere esses valores caso queira aproximar (diminuir Z) ou mudar a altura (mudar Y)
+camera.position.set(3, 1, 2); 
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0x0d1117, 1);
+document.getElementById('canvas-wrap').appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+/* >>> BLOQUEIO TOTAL DE MOVIMENTOS DA IMAGEM <<< */
+controls.enableRotate = false; // Impede girar o modelo
+controls.enableZoom   = false; // Impede dar zoom in/out
+controls.enablePan    = false; // Impede arrastar o modelo de lado
+controls.enableDamping = false;
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+const luz = new THREE.DirectionalLight(0xffffff, 1);
+luz.position.set(5, 5, 5);
+scene.add(luz);
+
+const textureLoader = new THREE.TextureLoader();
+const textura = textureLoader.load('./textura.png');
+
+const objLoader = new THREE.OBJLoader();
+objLoader.load('./meu-modelo.obj', function(objeto) {
+  const box     = new THREE.Box3().setFromObject(objeto);
+  const centro  = box.getCenter(new THREE.Vector3());
+  const tamanho = box.getSize(new THREE.Vector3());
+  const escala  = 2 / Math.max(tamanho.x, tamanho.y, tamanho.z);
+  objeto.scale.setScalar(escala);
+  objeto.position.sub(centro.multiplyScalar(escala));
+  
+  /* >>> AJUSTE FIXO DE ROTAÇÃO INTERNA DO MODELO <<< */
+  // Se o modelo carregar de costas ou de lado, você pode rotacionar o objeto fixamente aqui:
+  // objeto.rotation.y = Math.PI / 4; // Exemplo: rotaciona 45 graus no eixo Y
+
+  objeto.traverse(function(filho) {
+    if (filho.isMesh) filho.material = new THREE.MeshStandardMaterial({ map: textura });
+  });
+  scene.add(objeto);
+});
+
+/* ── CRIAR BOLINHAS + ÍNDICE ────────────────────────────────────── */
+const elementos   = [];
+const listaIndice = document.getElementById('lista-indice');
+let   ativoIdx    = null;
+
+anotacoes.forEach(function(a, i) {
+  const corIdx = a.num - 1;
+  const cor    = CORES[corIdx % CORES.length];
+  const num    = a.num;
+
+  const bolinha = document.createElement('div');
+  bolinha.className = 'bolinha bolinha-pulse';
+  bolinha.textContent = num;
+  bolinha.style.background  = cor;
+  bolinha.style.borderColor = cor;
+  document.body.appendChild(bolinha);
+
+  const etiqueta = document.createElement('div');
+  etiqueta.className = 'etiqueta';
+  etiqueta.style.borderLeftColor = cor;
+  etiqueta.innerHTML =
+    '<div class="titulo" style="color:' + cor + '">' + num + '. ' + a.titulo + '</div>' +
+    '<div class="nervo">' + a.texto + '</div>';
+  document.body.appendChild(etiqueta);
+
+  const item = document.createElement('div');
+  item.className = 'item-indice';
+  item.innerHTML =
+    '<div class="num-badge" style="background:' + cor + '">' + num + '</div>' +
+    '<div class="item-texto">' +
+      '<div class="item-titulo" style="color:rgba(255,255,255,0.85)">' + a.titulo + '</div>' +
+      '<div class="item-desc">' + a.texto + '</div>' +
+    '</div>';
+  listaIndice.appendChild(item);
+
+  bolinha.addEventListener('click', function(ev) {
+    ev.stopPropagation();
+    ativar(i);
+  });
+
+  item.addEventListener('click', function() {
+    ativar(i);
+    item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  });
+
+  elementos.push({
+    posicao:  a.posicao,
+    normal:   a.normal.normalize(),
+    bolinha,
+    etiqueta,
+    itemIdx:  item,
+  });
+});
+
+function ativar(idx) {
+  const jaMesmo = ativoIdx === idx;
+
+  elementos.forEach(function(e) {
+    e.etiqueta.style.display = 'none';
+    e.bolinha.classList.remove('ativa');
+    e.itemIdx.classList.remove('ativo');
+    e.itemIdx.querySelector('.item-titulo').style.color = 'rgba(255,255,255,0.85)';
+  });
+
+  if (jaMesmo) { ativoIdx = null; return; }
+
+  ativoIdx = idx;
+  const e      = elementos[idx];
+  const corIdx = anotacoes[idx].num - 1;
+  const cor    = CORES[corIdx % CORES.length];
+
+  e.etiqueta.style.display = 'block';
+  e.bolinha.classList.add('ativa');
+  e.itemIdx.classList.add('ativo');
+  e.itemIdx.querySelector('.item-titulo').style.color = cor;
+
+  e.itemIdx.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+document.addEventListener('click', function(ev) {
+  if (!ev.target.classList.contains('bolinha')) ativar(ativoIdx);
+});
+
+/* ── ATUALIZAR POSIÇÃO DAS BOLINHAS ─────────────────────────────── */
+function atualizarBolinhas() {
+  const dirCam = new THREE.Vector3();
+  camera.getWorldDirection(dirCam);
+
+  elementos.forEach(function(e, i) {
+    const pos = e.posicao.clone().project(camera);
+    
+    // Como a imagem agora está perfeitamente estática olhando para a frente, 
+    // afrouxamos o filtro "visivel" para renderizar as bolinhas frontais sem sumirem por pequenos desvios.
+    const produto = e.normal.dot(dirCam);
+    const visivel = produto < 0 && pos.z < 1;
+
+    if (visivel) {
+      const x = (pos.x *  0.5 + 0.5) * window.innerWidth;
+      const y = (-pos.y * 0.5 + 0.5) * window.innerHeight;
+
+      e.bolinha.style.left          = x + 'px';
+      e.bolinha.style.top           = y + 'px';
+      e.etiqueta.style.left         = x + 'px';
+      e.etiqueta.style.top          = y + 'px';
+      e.bolinha.style.opacity       = '1';
+      e.bolinha.style.pointerEvents = 'auto';
+
+      if (ativoIdx === i) e.etiqueta.style.display = 'block';
+    } else {
+      e.bolinha.style.opacity       = '0';
+      e.bolinha.style.pointerEvents = 'none';
+      e.etiqueta.style.display      = 'none';
+    }
+  });
+}
+
+/* ── LOOP ─────────────────────────────────────────────────────────── */
+function animar() {
+  requestAnimationFrame(animar);
+  controls.update();
+  renderer.render(scene, camera);
+  atualizarBolinhas();
+}
+animar();
+
+window.addEventListener('resize', function() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+</script>
+</body>
+</html>
+<div id="copyright">
+  © 2025 Editora Pró-fono — Todos os direitos reservados
+</div>
