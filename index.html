@@ -15,7 +15,7 @@
     #canvas-wrap {
       position: absolute;
       inset: 0;
-    } 
+    }
 
     /* ── ÍNDICE LATERAL ─────────────────────── */
     #indice {
@@ -54,22 +54,10 @@
       scrollbar-color: rgba(255,255,255,0.15) transparent;
     }
 
-    #lista-indice::-webkit-scrollbar {
-      width: 4px;
-    }
-
-    #lista-indice::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    #lista-indice::-webkit-scrollbar-thumb {
-      background: rgba(255,255,255,0.15);
-      border-radius: 4px;
-    }
-
-    #lista-indice::-webkit-scrollbar-thumb:hover {
-      background: rgba(255,255,255,0.28);
-    }
+    #lista-indice::-webkit-scrollbar { width: 4px; }
+    #lista-indice::-webkit-scrollbar-track { background: transparent; }
+    #lista-indice::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+    #lista-indice::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.28); }
 
     .item-indice {
       display: flex;
@@ -82,13 +70,8 @@
       margin-bottom: 2px;
     }
 
-    .item-indice:hover {
-      background: rgba(255,255,255,0.05);
-    }
-
-    .item-indice.ativo {
-      background: rgba(255,255,255,0.09);
-    }
+    .item-indice:hover { background: rgba(255,255,255,0.05); }
+    .item-indice.ativo  { background: rgba(255,255,255,0.09); }
 
     .num-badge {
       flex-shrink: 0;
@@ -187,6 +170,48 @@
       opacity: 0.65;
     }
 
+    /* ── CAIXA INFERIOR ESQUERDA ────────────── */
+    #caixa-informativa {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      width: 280px;
+      background: rgba(10, 14, 25, 0.88);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 14px;
+      z-index: 20;
+      backdrop-filter: blur(8px);
+      color: rgba(255,255,255,0.85);
+      font-family: Arial, sans-serif;
+    }
+
+    #caixa-informativa h4 {
+      color: #7C6FE0;
+      font-size: 13px;
+      font-weight: bold;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    #caixa-informativa p {
+      font-size: 12px;
+      line-height: 1.4;
+      color: rgba(255,255,255,0.7);
+    }
+
+    /* ── COPYRIGHT ──────────────────────────── */
+    #copyright {
+      position: absolute;
+      bottom: 14px;
+      right: 290px;
+      color: rgba(255,255,255,0.2);
+      font-size: 11px;
+      z-index: 20;
+      pointer-events: none;
+    }
+
     #instrucao {
       position: absolute;
       bottom: 14px;
@@ -198,34 +223,6 @@
       z-index: 5;
       pointer-events: none;
     }
-
-    #caixa-informativa {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  width: 700px;
-  background: #ffffff;
-  border: 1px solid rgba(0,0,0,0.15);
-  border-radius: 10px;
-  padding: 20px 12px;
-  z-index: 20;
-  font-family: Arial, sans-serif;
-  color: #000000;
-}
-
-#caixa-informativa h4 {
-  font-size: 13px;
-  font-weight: bold;
-  margin-bottom: 6px;
-  color: #000000;
-}
-
-#caixa-informativa p {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.5;
-  color: #000000;
-}
   </style>
 </head>
 <body>
@@ -237,19 +234,12 @@
   <div id="lista-indice"></div>
 </div>
 
-<div id="instrucao">Clique nas bolinhas para identificar as estruturas</div>
-
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
-
 <div id="caixa-informativa">
-  <h4>Observações Explicativas:</h4>
-  </p>Para saber os nomes dos músculos, clique nos números que aparecem sobre o modelo. 
-  </p>O índice lateral também pode ser utilizado para navegação rápida.
-  <p>
+  <h4>Notas Clínicas</h4>
+  <p>Este modelo apresenta os principais músculos da língua e assoalho bucal, responsáveis pelas funções de deglutição e fonação.</p>
+</div>
 
-<div id="canvas-wrap"></div>
+<div id="copyright">© 2025 Editora Pró-fono — Todos os direitos reservados</div>
 
 <div id="instrucao">Clique nas bolinhas para identificar as estruturas</div>
 
@@ -259,37 +249,32 @@
 
 <script>
 
-  
-
 /* ── CORES POR ANOTAÇÃO ─────────────────────────────────────────── */
 const CORES = [
-  '#7C6FE0', '#E06F6F', '#4DB88A', '#5AACE0', '#E0A03A', 
+  '#7C6FE0', '#E06F6F', '#4DB88A', '#5AACE0', '#E0A03A',
   '#D46FBB', '#6FBCE0', '#A0C44A', '#E07C3A', '#9ADE7B'
 ];
 
 /* ── ANOTAÇÕES ──────────────────────────────────────────────────── */
 const anotacoes = [
-  /* 01 */ { num:  1, posicao: new THREE.Vector3( 0.1,  -0.2,    0.2  ), normal: new THREE.Vector3(  0,  0,  1), titulo: 'Músculo Genioglosso',            texto: 'Hipoglosso' },
-  /* 02 */ { num:  2, posicao: new THREE.Vector3( 0.3,  0.1,  -0.4  ), normal: new THREE.Vector3(  0,  0,  1), titulo: 'Músculo Estiloglosso',            texto: 'Hipoglosso' },     
-  /* 03 */ { num:  3, posicao: new THREE.Vector3( 0.2,  0.3,  -0.35  ), normal: new THREE.Vector3(  0,  0,  1), titulo: 'Músculo Palatoglosso',            texto: 'Glossofaríngeo' },       
-  /* 04 */ { num:  4, posicao: new THREE.Vector3( 0.3,  0,  0.1  ), normal: new THREE.Vector3(  0,  0,  1), titulo: 'Músculo Hioglosso',             texto: 'Hipoglosso' }, 
-  /* 05 */ { num:  5, posicao: new THREE.Vector3( 0,    0.1, 0.2  ), normal: new THREE.Vector3(  0,  0,  1), titulo: 'Músculo longitudinal Inferior',  texto: 'Hipoglosso' }, 
-  /* 06 */ { num:  6, posicao: new THREE.Vector3( 0.1,  -0.7,  0  ), normal: new THREE.Vector3(  0,  0,  1), titulo: 'Músculo Esterno-Hiódeo',          texto: 'Plexo Cervical' },
-  /* 07 */ { num:  7, posicao: new THREE.Vector3( -0.2,  -0.6,  0  ), normal: new THREE.Vector3(  0,  0.2,  1), titulo: 'Músculo Esterno-Tireóideo',          texto: 'Plexo Cervical' },
-  /* 08 */ { num:  8, posicao: new THREE.Vector3( 0.2,  0.32,  0.4  ), normal: new THREE.Vector3(  0,  0,  1), titulo: 'Músculo Longitudinal Superior',          texto: 'Hipoglosso' },    
-  /* 09 */ { num:  9, posicao: new THREE.Vector3( 0.2,  0.2,  0.2  ), normal: new THREE.Vector3(  0,  0,  1), titulo: 'Músculo Transverso',          texto: 'Hipoglosso' },
-  /* 10 */ { num:  10, posicao: new THREE.Vector3( 0.2,  0.22,  0.1 ), normal: new THREE.Vector3(  0,  0,  1), titulo: 'Músculo Esterno-Hiódeo',          texto: 'Hipoglosso' },    
-  /* 11 */ { num:  11, posicao: new THREE.Vector3( -0.2,  -0.8,  0  ), normal: new THREE.Vector3(  0,  0.2,  1), titulo: 'Músculo Omo-Hióideo',          texto: 'Plexo Cervical' },
-  /* 12 */ { num:  12, posicao: new THREE.Vector3( -0.2,  -0.45,  0.1  ), normal: new THREE.Vector3(  0,  0.2,  1), titulo: 'Músculo Genio-Hióideo',          texto: 'Plexo Cervical' },
-]; 
+  /* 01 */ { num:  1, posicao: new THREE.Vector3( 0.1,  -0.2,   0.2  ), normal: new THREE.Vector3( 0,  0,   1), titulo: 'Músculo Genioglosso',           texto: 'Hipoglosso' },
+  /* 02 */ { num:  2, posicao: new THREE.Vector3( 0.3,   0.1,  -0.4  ), normal: new THREE.Vector3( 0,  0,   1), titulo: 'Músculo Estiloglosso',           texto: 'Hipoglosso' },
+  /* 03 */ { num:  3, posicao: new THREE.Vector3( 0.2,   0.3,  -0.35 ), normal: new THREE.Vector3( 0,  0,   1), titulo: 'Músculo Palatoglosso',           texto: 'Glossofaríngeo' },
+  /* 04 */ { num:  4, posicao: new THREE.Vector3( 0.3,   0,     0.1  ), normal: new THREE.Vector3( 0,  0,   1), titulo: 'Músculo Hioglosso',              texto: 'Hipoglosso' },
+  /* 05 */ { num:  5, posicao: new THREE.Vector3( 0,     0.1,   0.2  ), normal: new THREE.Vector3( 0,  0,   1), titulo: 'Músculo Longitudinal Inferior',  texto: 'Hipoglosso' },
+  /* 06 */ { num:  6, posicao: new THREE.Vector3( 0.1,  -0.7,   0    ), normal: new THREE.Vector3( 0,  0,   1), titulo: 'Músculo Esterno-Hiódeo',         texto: 'Plexo Cervical' },
+  /* 07 */ { num:  7, posicao: new THREE.Vector3(-0.2,  -0.6,   0    ), normal: new THREE.Vector3( 0,  0.2, 1), titulo: 'Músculo Esterno-Tireóideo',      texto: 'Plexo Cervical' },
+  /* 08 */ { num:  8, posicao: new THREE.Vector3( 0.2,   0.32,  0.4  ), normal: new THREE.Vector3( 0,  0,   1), titulo: 'Músculo Longitudinal Superior',  texto: 'Hipoglosso' },
+  /* 09 */ { num:  9, posicao: new THREE.Vector3( 0.2,   0.2,   0.2  ), normal: new THREE.Vector3( 0,  0,   1), titulo: 'Músculo Transverso',             texto: 'Hipoglosso' },
+  /* 10 */ { num: 10, posicao: new THREE.Vector3( 0.2,   0.22,  0.1  ), normal: new THREE.Vector3( 0,  0,   1), titulo: 'Músculo Esterno-Hiódeo',         texto: 'Hipoglosso' },
+  /* 11 */ { num: 11, posicao: new THREE.Vector3(-0.2,  -0.8,   0    ), normal: new THREE.Vector3( 0,  0.2, 1), titulo: 'Músculo Omo-Hióideo',            texto: 'Plexo Cervical' },
+  /* 12 */ { num: 12, posicao: new THREE.Vector3(-0.2,  -0.45,  0.1  ), normal: new THREE.Vector3( 0,  0.2, 1), titulo: 'Músculo Genio-Hióideo',          texto: 'Plexo Cervical' },
+];
 
 /* ── THREE.JS SETUP ─────────────────────────────────────────────── */
 const scene    = new THREE.Scene();
 const camera   = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-
-/* >>> AJUSTE DE POSIÇÃO FIXA DA CÂMERA <<< */
-// Altere esses valores caso queira aproximar (diminuir Z) ou mudar a altura (mudar Y)
-camera.position.set(3, 1, 2); 
+camera.position.set(3, 1, 2);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -297,11 +282,9 @@ renderer.setClearColor(0x0d1117, 1);
 document.getElementById('canvas-wrap').appendChild(renderer.domElement);
 
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
-
-/* >>> BLOQUEIO TOTAL DE MOVIMENTOS DA IMAGEM <<< */
-controls.enableRotate = false; // Impede girar o modelo
-controls.enableZoom   = false; // Impede dar zoom in/out
-controls.enablePan    = false; // Impede arrastar o modelo de lado
+controls.enableRotate  = false;
+controls.enableZoom    = false;
+controls.enablePan     = false;
 controls.enableDamping = false;
 
 scene.add(new THREE.AmbientLight(0xffffff, 0.9));
@@ -320,10 +303,6 @@ objLoader.load('./meu-modelo.obj', function(objeto) {
   const escala  = 2 / Math.max(tamanho.x, tamanho.y, tamanho.z);
   objeto.scale.setScalar(escala);
   objeto.position.sub(centro.multiplyScalar(escala));
-  
-  /* >>> AJUSTE FIXO DE ROTAÇÃO INTERNA DO MODELO <<< */
-  // Se o modelo carregar de costas ou de lado, você pode rotacionar o objeto fixamente aqui:
-  // objeto.rotation.y = Math.PI / 4; // Exemplo: rotaciona 45 graus no eixo Y
 
   objeto.traverse(function(filho) {
     if (filho.isMesh) filho.material = new THREE.MeshStandardMaterial({ map: textura });
@@ -420,16 +399,13 @@ function atualizarBolinhas() {
   camera.getWorldDirection(dirCam);
 
   elementos.forEach(function(e, i) {
-    const pos = e.posicao.clone().project(camera);
-    
-    // Como a imagem agora está perfeitamente estática olhando para a frente, 
-    // afrouxamos o filtro "visivel" para renderizar as bolinhas frontais sem sumirem por pequenos desvios.
+    const pos     = e.posicao.clone().project(camera);
     const produto = e.normal.dot(dirCam);
     const visivel = produto < 0 && pos.z < 1;
 
     if (visivel) {
-      const x = (pos.x *  0.5 + 0.5) * window.innerWidth;
-      const y = (-pos.y * 0.5 + 0.5) * window.innerHeight;
+      const x = ( pos.x *  0.5 + 0.5) * window.innerWidth;
+      const y = (-pos.y *  0.5 + 0.5) * window.innerHeight;
 
       e.bolinha.style.left          = x + 'px';
       e.bolinha.style.top           = y + 'px';
@@ -465,6 +441,3 @@ window.addEventListener('resize', function() {
 </script>
 </body>
 </html>
-<div id="copyright">
-  © 2025 Editora Pró-fono — Todos os direitos reservados
-</div>
